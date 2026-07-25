@@ -1,0 +1,7 @@
+# Local credentials and VS Code environment configuration
+.env
+
+# dbt-generated artifacts
+target/
+dbt_packages/
+logs/
