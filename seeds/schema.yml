@@ -1,0 +1,12 @@
+version: 2
+
+seeds:
+  - name: seed_region_reference
+    description: Reference seed demonstrating dbt seed functionality for region codes.
+    config:
+      schema: RAW
+    columns:
+      - name: region_code
+        data_tests:
+          - unique
+          - not_null

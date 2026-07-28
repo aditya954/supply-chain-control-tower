@@ -1,5 +1,68 @@
-name: 'dbt_project'
-version: '1.0.0'
+name: supply_chain_control_tower
+version: 1.0.0
 config-version: 2
 
-profile: 'snowflake_dbt_starter'
+profile: supply_chain_control_tower
+
+model-paths: ['models']
+analysis-paths: ['analyses']
+test-paths: ['tests']
+seed-paths: ['seeds']
+macro-paths: ['macros']
+snapshot-paths: ['snapshots']
+docs-paths: ['docs']
+
+clean-targets:
+  - target
+  - dbt_packages
+
+vars:
+  company_name: 'Enterprise Supply Chain Control Tower'
+  fiscal_year_start_month: 4
+  inventory_aging_buckets: [30, 60, 90, 180, 365]
+  supplier_otd_threshold_days: 0
+  quality_pass_threshold: 80
+  default_currency: 'USD'
+
+on-run-start:
+  - "{{ log('Starting Supply Chain Control Tower run | target=' ~ target.name, info=true) }}"
+
+on-run-end:
+  - "{{ log('Supply Chain Control Tower run completed', info=true) }}"
+
+models:
+  supply_chain_control_tower:
+    raw:
+      +schema: RAW
+      +materialized: view
+      +tags: ['raw']
+    staging:
+      +schema: STAGING
+      +materialized: view
+      +tags: ['staging']
+    intermediate:
+      +schema: INTERMEDIATE
+      +materialized: view
+      +tags: ['intermediate']
+    marts:
+      +schema: MART
+      +tags: ['mart']
+      dimensions:
+        +materialized: table
+        +tags: ['dimension']
+      facts:
+        +materialized: incremental
+        +tags: ['fact']
+        +on_schema_change: append_new_columns
+      kpis:
+        +materialized: table
+        +tags: ['kpi']
+
+snapshots:
+  supply_chain_control_tower:
+    +target_schema: MART
+    +tags: ['snapshot']
+
+seeds:
+  supply_chain_control_tower:
+    +schema: RAW

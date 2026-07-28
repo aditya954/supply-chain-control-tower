@@ -1,0 +1,53 @@
+# Raw layer views over SUPPLY_CHAIN_DB.RAW source tables.
+version: 2
+models:
+- name: raw_supplier
+  description: Supplier master records from SAP MM.
+- name: raw_material
+  description: Material master records from SAP MM.
+- name: raw_plant
+  description: Manufacturing plant master data.
+- name: raw_warehouse
+  description: Warehouse and storage location master data.
+- name: raw_machine
+  description: Production machine and equipment master from MES.
+- name: raw_carrier
+  description: Logistics carrier master data.
+- name: raw_customer
+  description: Customer master records from SAP SD.
+- name: raw_employee
+  description: Employee master records from HRIS.
+- name: raw_calendar
+  description: Enterprise calendar dimension for date-based analysis.
+- name: raw_purchase_orders
+  description: Purchase order headers from SAP MM.
+- name: raw_purchase_order_lines
+  description: Purchase order line items from SAP MM.
+- name: raw_inventory
+  description: Current inventory positions by material and warehouse.
+- name: raw_inventory_transactions
+  description: Inventory movement transactions.
+- name: raw_production_orders
+  description: Production order headers from SAP PP.
+- name: raw_production_transactions
+  description: Production output and scrap transactions from MES.
+- name: raw_machine_sensor_readings
+  description: IoT sensor readings from shop floor equipment.
+- name: raw_shipments
+  description: Outbound shipment headers from TMS.
+- name: raw_shipment_tracking
+  description: Shipment tracking events from TMS.
+- name: raw_sales_orders
+  description: Sales order headers from SAP SD.
+- name: raw_sales_order_lines
+  description: Sales order line items from SAP SD.
+- name: raw_quality_inspection
+  description: Quality inspection results from QMS.
+- name: raw_defects
+  description: Quality defect records from QMS.
+- name: raw_returns
+  description: Customer return transactions.
+- name: raw_warranty_claims
+  description: Warranty claim submissions.
+- name: raw_supplier_deliveries
+  description: Inbound supplier delivery confirmations.

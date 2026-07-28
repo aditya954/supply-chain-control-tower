@@ -1,0 +1,11 @@
+version: 2
+
+snapshots:
+  - name: snap_supplier
+    description: SCD Type 2 history of supplier master changes.
+  - name: snap_material
+    description: SCD Type 2 history of material master changes.
+  - name: snap_inventory
+    description: SCD Type 2 history of inventory position changes.
+  - name: snap_customer
+    description: SCD Type 2 history of customer master changes.

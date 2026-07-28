@@ -1,0 +1,119 @@
+version: 2
+
+sources:
+  - name: raw_supply_chain
+    description: Enterprise ERP and MES source systems loaded into Snowflake RAW schema.
+    database: ANALYTICS
+    schema: RAW
+    loader: snowflake_copy
+    freshness:
+      warn_after: {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+    tables:
+      - name: supplier
+        description: Supplier master from SAP MM.
+        loaded_at_field: updated_at
+        freshness:
+          warn_after: {count: 12, period: hour}
+          error_after: {count: 24, period: hour}
+        columns:
+          - name: supplier_id
+            description: Primary key for supplier.
+
+      - name: material
+        description: Material master from SAP MM.
+        loaded_at_field: updated_at
+        columns:
+          - name: material_id
+            description: Primary key for material.
+
+      - name: plant
+        description: Manufacturing plant master.
+        loaded_at_field: updated_at
+
+      - name: warehouse
+        description: Warehouse and storage location master.
+        loaded_at_field: updated_at
+
+      - name: machine
+        description: Production machine and equipment master from MES.
+        loaded_at_field: updated_at
+
+      - name: carrier
+        description: Logistics carrier master.
+        loaded_at_field: updated_at
+
+      - name: customer
+        description: Customer master from SAP SD.
+        loaded_at_field: updated_at
+
+      - name: employee
+        description: Employee master from HRIS.
+        loaded_at_field: updated_at
+
+      - name: calendar
+        description: Enterprise calendar dimension.
+
+      - name: purchase_orders
+        description: Purchase order headers from SAP MM.
+        loaded_at_field: updated_at
+
+      - name: purchase_order_lines
+        description: Purchase order line items.
+        loaded_at_field: updated_at
+
+      - name: inventory
+        description: Current inventory positions by material and warehouse.
+        loaded_at_field: updated_at
+
+      - name: inventory_transactions
+        description: Inventory movement transactions.
+        loaded_at_field: created_at
+
+      - name: production_orders
+        description: Production order headers from SAP PP.
+        loaded_at_field: updated_at
+
+      - name: production_transactions
+        description: Production output and scrap transactions from MES.
+        loaded_at_field: created_at
+
+      - name: machine_sensor_readings
+        description: IoT sensor readings from shop floor equipment.
+        loaded_at_field: created_at
+
+      - name: shipments
+        description: Outbound shipment headers from TMS.
+        loaded_at_field: updated_at
+
+      - name: shipment_tracking
+        description: Shipment tracking events from TMS.
+        loaded_at_field: created_at
+
+      - name: sales_orders
+        description: Sales order headers from SAP SD.
+        loaded_at_field: updated_at
+
+      - name: sales_order_lines
+        description: Sales order line items.
+        loaded_at_field: updated_at
+
+      - name: quality_inspection
+        description: Quality inspection results from QMS.
+        loaded_at_field: updated_at
+
+      - name: defects
+        description: Quality defect records.
+        loaded_at_field: created_at
+
+      - name: returns
+        description: Customer return transactions.
+        loaded_at_field: created_at
+
+      - name: warranty_claims
+        description: Warranty claim submissions.
+        loaded_at_field: created_at
+
+      - name: supplier_deliveries
+        description: Inbound supplier delivery confirmations.
+        loaded_at_field: updated_at

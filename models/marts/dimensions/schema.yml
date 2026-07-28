@@ -1,0 +1,162 @@
+version: 2
+
+models:
+  - name: dim_supplier
+    description: Supplier dimension with delivery performance metrics.
+    columns:
+      - name: supplier_id
+        description: Primary key for supplier dimension.
+        data_tests:
+          - unique
+          - not_null
+      - name: supplier_tier
+        description: Supplier tier classification.
+        data_tests:
+          - accepted_values:
+              values: ['tier 1', 'tier 2', 'tier 3']
+      - name: is_active
+        description: Active supplier indicator.
+        data_tests:
+          - accepted_values:
+              values: ['Y', 'N']
+      - name: on_time_delivery_pct
+        description: Supplier on-time delivery percentage.
+        data_tests:
+          - valid_percentage
+      - name: avg_delay_days
+        description: Average supplier delivery delay in days.
+        data_tests:
+          - positive_value
+      - name: avg_lead_time
+        description: Average supplier lead time in days.
+        data_tests:
+          - positive_value
+
+  - name: dim_material
+    description: Material dimension with cost and classification attributes.
+    columns:
+      - name: material_id
+        description: Primary key for material dimension.
+        data_tests:
+          - unique
+          - not_null
+      - name: unit_cost_usd
+        description: Standard unit cost in USD.
+        data_tests:
+          - not_null
+          - positive_value
+      - name: is_active
+        description: Active material indicator.
+        data_tests:
+          - accepted_values:
+              values: ['Y', 'N']
+
+  - name: dim_customer
+    description: Customer dimension with segment and credit attributes.
+    columns:
+      - name: customer_id
+        description: Primary key for customer dimension.
+        data_tests:
+          - unique
+          - not_null
+      - name: credit_limit_usd
+        description: Customer credit limit in USD.
+        data_tests:
+          - positive_value
+      - name: is_active
+        description: Active customer indicator.
+        data_tests:
+          - accepted_values:
+              values: ['Y', 'N']
+
+  - name: dim_machine
+    description: Machine dimension with average utilization from sensor readings.
+    columns:
+      - name: machine_id
+        description: Primary key for machine dimension.
+        data_tests:
+          - unique
+          - not_null
+      - name: plant_id
+        description: Foreign key to plant dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_plant')
+              field: plant_id
+      - name: avg_utilization_pct
+        description: Average machine utilization percentage.
+        data_tests:
+          - valid_percentage
+      - name: is_active
+        description: Active machine indicator.
+        data_tests:
+          - accepted_values:
+              values: ['Y', 'N']
+
+  - name: dim_warehouse
+    description: Warehouse dimension enriched with parent plant attributes.
+    columns:
+      - name: warehouse_id
+        description: Primary key for warehouse dimension.
+        data_tests:
+          - unique
+          - not_null
+      - name: plant_id
+        description: Foreign key to plant dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_plant')
+              field: plant_id
+      - name: capacity_pallets
+        description: Warehouse pallet capacity.
+        data_tests:
+          - positive_value
+
+  - name: dim_plant
+    description: Manufacturing plant dimension.
+    columns:
+      - name: plant_id
+        description: Primary key for plant dimension.
+        data_tests:
+          - unique
+          - not_null
+      - name: region
+        description: Plant geographic region.
+        data_tests:
+          - accepted_values:
+              values: ['EMEA', 'NA', 'APAC', 'LATAM']
+      - name: capacity_units_per_day
+        description: Daily production capacity in units.
+        data_tests:
+          - positive_value
+
+  - name: dim_date
+    description: Calendar dimension with fiscal attributes and surrogate key.
+    columns:
+      - name: date_key
+        description: Integer calendar key in YYYYMMDD format.
+        data_tests:
+          - unique
+          - not_null
+      - name: date_sk
+        description: Surrogate key generated from calendar date.
+        data_tests:
+          - unique
+          - not_null
+      - name: calendar_date
+        description: Calendar date value.
+        data_tests:
+          - unique
+          - not_null
+      - name: is_weekend
+        description: Weekend indicator.
+        data_tests:
+          - accepted_values:
+              values: ['Y', 'N']
+      - name: is_holiday
+        description: Holiday indicator.
+        data_tests:
+          - accepted_values:
+              values: ['Y', 'N']

@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: kpi_supply_chain_control_tower
+    description: Monthly supply chain control tower KPI scorecard aggregating inventory, supplier, production, shipment, quality, and warranty metrics.
+    columns:
+      - name: kpi_key
+        description: Surrogate key for monthly KPI records.
+        data_tests:
+          - unique
+          - not_null
+      - name: year_month
+        description: KPI reporting month in YYYY-MM format.
+        data_tests:
+          - unique
+          - not_null
+      - name: month_start_date
+        description: First calendar date of the reporting month.
+        data_tests:
+          - not_null
+      - name: inventory_turnover
+        description: Monthly inventory turnover ratio based on COGS and average inventory value.
+        data_tests:
+          - positive_value
+      - name: days_of_inventory
+        description: Estimated days of inventory on hand for the month.
+        data_tests:
+          - positive_value
+      - name: inventory_age_days
+        description: Average inventory age in days for the month.
+        data_tests:
+          - positive_value
+      - name: stockout_rate
+        description: Percentage of inventory positions in stockout during the month.
+        data_tests:
+          - valid_percentage
+      - name: supplier_on_time_delivery_pct
+        description: Supplier on-time delivery percentage for the month.
+        data_tests:
+          - valid_percentage
+      - name: supplier_avg_lead_time_days
+        description: Average supplier lead time in days for the month.
+        data_tests:
+          - positive_value
+      - name: production_efficiency_pct
+        description: Average production efficiency percentage for the month.
+        data_tests:
+          - valid_percentage
+      - name: machine_utilization_pct
+        description: Average machine utilization percentage for the month.
+        data_tests:
+          - valid_percentage
+      - name: scrap_rate_pct
+        description: Average production scrap rate percentage for the month.
+        data_tests:
+          - valid_percentage
+      - name: first_pass_yield_pct
+        description: Average first pass yield percentage for the month.
+        data_tests:
+          - valid_percentage
+      - name: shipment_delay_rate
+        description: Percentage of shipments delayed during the month.
+        data_tests:
+          - valid_percentage
+      - name: avg_transit_time_days
+        description: Average shipment transit time in days for the month.
+        data_tests:
+          - positive_value
+      - name: quality_defect_rate
+        description: Average quality defect rate percentage for the month.
+        data_tests:
+          - valid_percentage
+      - name: warranty_claim_rate
+        description: Warranty claims as a percentage of sales orders for the month.
+        data_tests:
+          - valid_percentage

@@ -5,3 +5,18 @@
 target/
 dbt_packages/
 logs/
+logs_*.txt
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local dbt user config
+.user.yml
+
+# Large generated sample data (regenerate via scripts/generate_all_data.py)
+sample_data/
+
+# IDE local settings
+.claude/
+.vscode/

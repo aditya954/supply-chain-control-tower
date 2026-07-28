@@ -1,0 +1,672 @@
+# Staging layer models with deduplication, type casting, and data quality tests.
+version: 2
+models:
+- name: stg_supplier
+  description: Staged supplier master with deduplication, type casting, and audit
+    columns.
+  columns:
+  - name: supplier_id
+    description: Primary key for supplier.
+    data_tests:
+    - unique
+    - not_null
+- name: stg_material
+  description: Staged material master with standardized units and cost fields.
+  columns:
+  - name: material_id
+    description: Primary key for material.
+    data_tests:
+    - unique
+    - not_null
+- name: stg_plant
+  description: Staged plant master with regional attributes.
+  columns:
+  - name: plant_id
+    description: Primary key for plant.
+    data_tests:
+    - unique
+    - not_null
+- name: stg_warehouse
+  description: Staged warehouse master linked to plants.
+  columns:
+  - name: warehouse_id
+    description: Primary key for warehouse.
+    data_tests:
+    - unique
+    - not_null
+  - name: plant_id
+    description: Foreign key to stg_plant.plant_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_plant')
+        field: plant_id
+- name: stg_machine
+  description: Staged machine master with capacity and commissioning dates.
+  columns:
+  - name: machine_id
+    description: Primary key for machine.
+    data_tests:
+    - unique
+    - not_null
+  - name: plant_id
+    description: Foreign key to stg_plant.plant_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_plant')
+        field: plant_id
+- name: stg_carrier
+  description: Staged carrier master with transport mode and service level.
+  columns:
+  - name: carrier_id
+    description: Primary key for carrier.
+    data_tests:
+    - unique
+    - not_null
+- name: stg_customer
+  description: Staged customer master with segment and credit attributes.
+  columns:
+  - name: customer_id
+    description: Primary key for customer.
+    data_tests:
+    - unique
+    - not_null
+- name: stg_employee
+  description: Staged employee master with department and plant assignment.
+  columns:
+  - name: employee_id
+    description: Primary key for employee.
+    data_tests:
+    - unique
+    - not_null
+  - name: plant_id
+    description: Foreign key to stg_plant.plant_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_plant')
+        field: plant_id
+- name: stg_calendar
+  description: Staged calendar dimension with fiscal period attributes.
+  columns:
+  - name: date_key
+    description: Primary key for calendar.
+    data_tests:
+    - unique
+    - not_null
+- name: stg_purchase_orders
+  description: Staged purchase order headers with normalized status values.
+  columns:
+  - name: purchase_order_id
+    description: Primary key for purchase orders.
+    data_tests:
+    - unique
+    - not_null
+  - name: po_status
+    description: Normalized po status value.
+    data_tests:
+    - accepted_values:
+        values:
+        - open
+        - closed
+        - cancelled
+        - partial
+  - name: supplier_id
+    description: Foreign key to stg_supplier.supplier_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_supplier')
+        field: supplier_id
+  - name: plant_id
+    description: Foreign key to stg_plant.plant_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_plant')
+        field: plant_id
+  - name: buyer_employee_id
+    description: Foreign key to stg_employee.employee_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_employee')
+        field: employee_id
+- name: stg_purchase_order_lines
+  description: Staged purchase order line items with quantity and pricing.
+  columns:
+  - name: purchase_order_line_id
+    description: Primary key for purchase order lines.
+    data_tests:
+    - unique
+    - not_null
+  - name: purchase_order_id
+    description: Foreign key to stg_purchase_orders.purchase_order_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_purchase_orders')
+        field: purchase_order_id
+  - name: material_id
+    description: Foreign key to stg_material.material_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_material')
+        field: material_id
+- name: stg_inventory
+  description: Staged inventory positions with on-hand and available quantities.
+  columns:
+  - name: inventory_id
+    description: Primary key for inventory.
+    data_tests:
+    - unique
+    - not_null
+  - name: material_id
+    description: Foreign key to stg_material.material_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_material')
+        field: material_id
+  - name: warehouse_id
+    description: Foreign key to stg_warehouse.warehouse_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_warehouse')
+        field: warehouse_id
+- name: stg_inventory_transactions
+  description: Staged inventory transactions with normalized transaction types.
+  columns:
+  - name: inventory_transaction_id
+    description: Primary key for inventory transactions.
+    data_tests:
+    - unique
+    - not_null
+  - name: transaction_type
+    description: Normalized transaction type value.
+    data_tests:
+    - accepted_values:
+        values:
+        - receipt
+        - issue
+        - transfer
+        - adjustment
+        - cycle count
+  - name: inventory_id
+    description: Foreign key to stg_inventory.inventory_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_inventory')
+        field: inventory_id
+  - name: material_id
+    description: Foreign key to stg_material.material_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_material')
+        field: material_id
+  - name: warehouse_id
+    description: Foreign key to stg_warehouse.warehouse_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_warehouse')
+        field: warehouse_id
+- name: stg_production_orders
+  description: Staged production orders with planned and actual quantities.
+  columns:
+  - name: production_order_id
+    description: Primary key for production orders.
+    data_tests:
+    - unique
+    - not_null
+  - name: production_status
+    description: Normalized production status value.
+    data_tests:
+    - accepted_values:
+        values:
+        - planned
+        - released
+        - in progress
+        - completed
+        - cancelled
+  - name: plant_id
+    description: Foreign key to stg_plant.plant_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_plant')
+        field: plant_id
+  - name: material_id
+    description: Foreign key to stg_material.material_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_material')
+        field: material_id
+  - name: machine_id
+    description: Foreign key to stg_machine.machine_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_machine')
+        field: machine_id
+- name: stg_production_transactions
+  description: Staged production transactions by order and machine.
+  columns:
+  - name: production_transaction_id
+    description: Primary key for production transactions.
+    data_tests:
+    - unique
+    - not_null
+  - name: transaction_type
+    description: Normalized transaction type value.
+    data_tests:
+    - accepted_values:
+        values:
+        - start
+        - output
+        - scrap
+        - rework
+        - complete
+  - name: production_order_id
+    description: Foreign key to stg_production_orders.production_order_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_production_orders')
+        field: production_order_id
+  - name: plant_id
+    description: Foreign key to stg_plant.plant_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_plant')
+        field: plant_id
+  - name: machine_id
+    description: Foreign key to stg_machine.machine_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_machine')
+        field: machine_id
+  - name: material_id
+    description: Foreign key to stg_material.material_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_material')
+        field: material_id
+- name: stg_machine_sensor_readings
+  description: Staged machine sensor readings with temperature and utilization metrics.
+  columns:
+  - name: sensor_reading_id
+    description: Primary key for machine sensor readings.
+    data_tests:
+    - unique
+    - not_null
+  - name: machine_id
+    description: Foreign key to stg_machine.machine_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_machine')
+        field: machine_id
+  - name: plant_id
+    description: Foreign key to stg_plant.plant_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_plant')
+        field: plant_id
+- name: stg_shipments
+  description: Staged shipment headers with delivery and delay tracking.
+  columns:
+  - name: shipment_id
+    description: Primary key for shipments.
+    data_tests:
+    - unique
+    - not_null
+  - name: shipment_status
+    description: Normalized shipment status value.
+    data_tests:
+    - accepted_values:
+        values:
+        - created
+        - in transit
+        - delivered
+        - delayed
+        - cancelled
+  - name: carrier_id
+    description: Foreign key to stg_carrier.carrier_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_carrier')
+        field: carrier_id
+  - name: origin_warehouse_id
+    description: Foreign key to stg_warehouse.warehouse_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_warehouse')
+        field: warehouse_id
+  - name: destination_customer_id
+    description: Foreign key to stg_customer.customer_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_customer')
+        field: customer_id
+- name: stg_shipment_tracking
+  description: Staged shipment tracking events in sequence.
+  columns:
+  - name: shipment_tracking_id
+    description: Primary key for shipment tracking.
+    data_tests:
+    - unique
+    - not_null
+  - name: shipment_id
+    description: Foreign key to stg_shipments.shipment_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_shipments')
+        field: shipment_id
+- name: stg_sales_orders
+  description: Staged sales order headers with normalized status values.
+  columns:
+  - name: sales_order_id
+    description: Primary key for sales orders.
+    data_tests:
+    - unique
+    - not_null
+  - name: sales_order_status
+    description: Normalized sales order status value.
+    data_tests:
+    - accepted_values:
+        values:
+        - open
+        - confirmed
+        - shipped
+        - delivered
+        - cancelled
+  - name: customer_id
+    description: Foreign key to stg_customer.customer_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_customer')
+        field: customer_id
+- name: stg_sales_order_lines
+  description: Staged sales order line items with ordered and shipped quantities.
+  columns:
+  - name: sales_order_line_id
+    description: Primary key for sales order lines.
+    data_tests:
+    - unique
+    - not_null
+  - name: sales_order_id
+    description: Foreign key to stg_sales_orders.sales_order_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_sales_orders')
+        field: sales_order_id
+  - name: material_id
+    description: Foreign key to stg_material.material_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_material')
+        field: material_id
+- name: stg_quality_inspection
+  description: Staged quality inspection results with pass/fail outcomes.
+  columns:
+  - name: quality_inspection_id
+    description: Primary key for quality inspection.
+    data_tests:
+    - unique
+    - not_null
+  - name: inspection_result
+    description: Normalized inspection result value.
+    data_tests:
+    - accepted_values:
+        values:
+        - pass
+        - fail
+  - name: material_id
+    description: Foreign key to stg_material.material_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_material')
+        field: material_id
+  - name: plant_id
+    description: Foreign key to stg_plant.plant_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_plant')
+        field: plant_id
+  - name: production_order_id
+    description: Foreign key to stg_production_orders.production_order_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_production_orders')
+        field: production_order_id
+  - name: inspector_employee_id
+    description: Foreign key to stg_employee.employee_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_employee')
+        field: employee_id
+- name: stg_defects
+  description: Staged defect records linked to quality inspections.
+  columns:
+  - name: defect_id
+    description: Primary key for defects.
+    data_tests:
+    - unique
+    - not_null
+  - name: quality_inspection_id
+    description: Foreign key to stg_quality_inspection.quality_inspection_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_quality_inspection')
+        field: quality_inspection_id
+  - name: material_id
+    description: Foreign key to stg_material.material_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_material')
+        field: material_id
+  - name: plant_id
+    description: Foreign key to stg_plant.plant_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_plant')
+        field: plant_id
+- name: stg_returns
+  description: Staged customer returns with reason and status tracking.
+  columns:
+  - name: return_id
+    description: Primary key for returns.
+    data_tests:
+    - unique
+    - not_null
+  - name: return_status
+    description: Normalized return status value.
+    data_tests:
+    - accepted_values:
+        values:
+        - requested
+        - approved
+        - received
+        - rejected
+  - name: sales_order_id
+    description: Foreign key to stg_sales_orders.sales_order_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_sales_orders')
+        field: sales_order_id
+  - name: customer_id
+    description: Foreign key to stg_customer.customer_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_customer')
+        field: customer_id
+  - name: material_id
+    description: Foreign key to stg_material.material_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_material')
+        field: material_id
+- name: stg_warranty_claims
+  description: Staged warranty claims with claim status and amounts.
+  columns:
+  - name: warranty_claim_id
+    description: Primary key for warranty claims.
+    data_tests:
+    - unique
+    - not_null
+  - name: claim_status
+    description: Normalized claim status value.
+    data_tests:
+    - accepted_values:
+        values:
+        - submitted
+        - under review
+        - approved
+        - denied
+        - paid
+  - name: customer_id
+    description: Foreign key to stg_customer.customer_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_customer')
+        field: customer_id
+  - name: material_id
+    description: Foreign key to stg_material.material_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_material')
+        field: material_id
+  - name: sales_order_id
+    description: Foreign key to stg_sales_orders.sales_order_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_sales_orders')
+        field: sales_order_id
+- name: stg_supplier_deliveries
+  description: Staged supplier deliveries with on-time delivery indicators.
+  columns:
+  - name: supplier_delivery_id
+    description: Primary key for supplier deliveries.
+    data_tests:
+    - unique
+    - not_null
+  - name: purchase_order_id
+    description: Foreign key to stg_purchase_orders.purchase_order_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_purchase_orders')
+        field: purchase_order_id
+  - name: supplier_id
+    description: Foreign key to stg_supplier.supplier_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_supplier')
+        field: supplier_id
+  - name: plant_id
+    description: Foreign key to stg_plant.plant_id.
+    data_tests:
+    - relationships:
+        to: ref('stg_plant')
+        field: plant_id
+unit_tests:
+- name: test_stg_supplier_deduplicates_by_updated_at
+  description: When duplicate supplier_id rows exist, retain only the most recently
+    updated record.
+  model: stg_supplier
+  given:
+  - input: ref('raw_supplier')
+    rows:
+    - supplier_id: 1
+      supplier_code: SUP-000001
+      supplier_name: Acme Corp
+      supplier_tier: Tier 1
+      country_code: US
+      city: Chicago
+      contact_email: OLD@ACME.COM
+      contact_phone: 555-0001
+      payment_terms: NET30
+      lead_time_days: 10
+      is_active: Y
+      created_at: '2024-01-01'
+      updated_at: '2024-06-01'
+    - supplier_id: 1
+      supplier_code: SUP-000001
+      supplier_name: Acme Corp
+      supplier_tier: Tier 1
+      country_code: US
+      city: Chicago
+      contact_email: NEW@ACME.COM
+      contact_phone: 555-0002
+      payment_terms: NET45
+      lead_time_days: 12
+      is_active: Y
+      created_at: '2024-01-01'
+      updated_at: '2025-01-01'
+    - supplier_id: 2
+      supplier_code: SUP-000002
+      supplier_name: Beta LLC
+      supplier_tier: Tier 2
+      country_code: DE
+      city: Berlin
+      contact_email: info@beta.de
+      contact_phone: 555-0003
+      payment_terms: NET60
+      lead_time_days: 15
+      is_active: Y
+      created_at: '2024-02-01'
+      updated_at: '2024-08-01'
+  expect:
+    rows:
+    - supplier_id: 1
+      supplier_code: SUP-000001
+      supplier_name: Acme Corp
+      contact_email: new@acme.com
+      payment_terms: NET45
+      lead_time_days: 12
+      updated_at: '2025-01-01'
+    - supplier_id: 2
+      supplier_code: SUP-000002
+      supplier_name: Beta LLC
+      contact_email: info@beta.de
+      payment_terms: NET60
+      lead_time_days: 15
+      updated_at: '2024-08-01'
+- name: test_stg_purchase_orders_normalizes_po_status
+  description: Purchase order status values are lowercased and trimmed during staging.
+  model: stg_purchase_orders
+  given:
+  - input: ref('raw_purchase_orders')
+    rows:
+    - purchase_order_id: 100
+      po_number: PO-00000100
+      supplier_id: 1
+      plant_id: 1
+      buyer_employee_id: 1
+      order_date: '2025-01-15'
+      expected_delivery_date: '2025-02-01'
+      po_status: ' Open '
+      currency_code: USD
+      total_amount_usd: 1500.0
+      created_at: '2025-01-15'
+      updated_at: '2025-01-20'
+    - purchase_order_id: 101
+      po_number: PO-00000101
+      supplier_id: 2
+      plant_id: 1
+      buyer_employee_id: 2
+      order_date: '2025-02-01'
+      expected_delivery_date: '2025-02-15'
+      po_status: CLOSED
+      currency_code: USD
+      total_amount_usd: 3200.5
+      created_at: '2025-02-01'
+      updated_at: '2025-02-10'
+    - purchase_order_id: 102
+      po_number: PO-00000102
+      supplier_id: 3
+      plant_id: 2
+      buyer_employee_id: 3
+      order_date: '2025-03-01'
+      expected_delivery_date: '2025-03-20'
+      po_status: Partial
+      currency_code: USD
+      total_amount_usd: 875.25
+      created_at: '2025-03-01'
+      updated_at: '2025-03-05'
+  expect:
+    rows:
+    - purchase_order_id: 100
+      po_status: open
+    - purchase_order_id: 101
+      po_status: closed
+    - purchase_order_id: 102
+      po_status: partial

@@ -1,0 +1,5 @@
+region_code,region_name,is_active
+NA,North America,Y
+EMEA,Europe Middle East Africa,Y
+APAC,Asia Pacific,Y
+LATAM,Latin America,Y

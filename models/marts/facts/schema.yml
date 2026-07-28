@@ -1,0 +1,228 @@
+version: 2
+
+models:
+  - name: fact_inventory
+    description: Incremental inventory fact with stock health and valuation metrics.
+    columns:
+      - name: fact_inventory_key
+        description: Surrogate key for inventory fact records.
+        data_tests:
+          - unique
+          - not_null
+      - name: inventory_id
+        description: Natural key for inventory position.
+        data_tests:
+          - unique
+          - not_null
+      - name: material_id
+        description: Foreign key to material dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_material')
+              field: material_id
+      - name: warehouse_id
+        description: Foreign key to warehouse dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_warehouse')
+              field: warehouse_id
+      - name: inventory_value
+        description: Inventory value in USD.
+        data_tests:
+          - positive_value
+      - name: stockout_flag
+        description: Stockout indicator for the inventory position.
+        data_tests:
+          - accepted_values:
+              values: [true, false]
+
+  - name: fact_purchase_orders
+    description: Incremental purchase order fact with aggregated line metrics.
+    columns:
+      - name: fact_purchase_order_key
+        description: Surrogate key for purchase order fact records.
+        data_tests:
+          - unique
+          - not_null
+      - name: purchase_order_id
+        description: Natural key for purchase order.
+        data_tests:
+          - unique
+          - not_null
+      - name: supplier_id
+        description: Foreign key to supplier dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_supplier')
+              field: supplier_id
+      - name: plant_id
+        description: Foreign key to plant dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_plant')
+              field: plant_id
+      - name: po_status
+        description: Purchase order status.
+        data_tests:
+          - accepted_values:
+              values: ['open', 'closed', 'cancelled', 'partial']
+      - name: fulfillment_pct
+        description: Received quantity as a percentage of ordered quantity.
+        data_tests:
+          - valid_percentage
+
+  - name: fact_shipments
+    description: Incremental shipment fact with delay and transit metrics.
+    columns:
+      - name: fact_shipment_key
+        description: Surrogate key for shipment fact records.
+        data_tests:
+          - unique
+          - not_null
+      - name: shipment_id
+        description: Natural key for shipment.
+        data_tests:
+          - unique
+          - not_null
+      - name: origin_warehouse_id
+        description: Foreign key to origin warehouse dimension.
+        data_tests:
+          - relationships:
+              to: ref('dim_warehouse')
+              field: warehouse_id
+      - name: destination_customer_id
+        description: Foreign key to destination customer dimension.
+        data_tests:
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_id
+      - name: delay_days
+        description: Shipment delay in days.
+        data_tests:
+          - positive_value
+      - name: is_delayed
+        description: Delayed shipment indicator.
+        data_tests:
+          - accepted_values:
+              values: [true, false]
+
+  - name: fact_quality
+    description: Incremental quality inspection fact with yield and defect metrics.
+    columns:
+      - name: fact_quality_key
+        description: Surrogate key for quality fact records.
+        data_tests:
+          - unique
+          - not_null
+      - name: quality_inspection_id
+        description: Natural key for quality inspection.
+        data_tests:
+          - unique
+          - not_null
+      - name: plant_id
+        description: Foreign key to plant dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_plant')
+              field: plant_id
+      - name: material_id
+        description: Foreign key to material dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_material')
+              field: material_id
+      - name: inspection_result
+        description: Inspection pass or fail result.
+        data_tests:
+          - accepted_values:
+              values: ['pass', 'fail']
+      - name: first_pass_yield_pct
+        description: First pass yield percentage.
+        data_tests:
+          - valid_percentage
+      - name: defect_rate_pct
+        description: Defect rate percentage.
+        data_tests:
+          - valid_percentage
+
+  - name: fact_supplier_performance
+    description: Supplier performance fact table at supplier grain.
+    columns:
+      - name: fact_supplier_performance_key
+        description: Surrogate key for supplier performance fact records.
+        data_tests:
+          - unique
+          - not_null
+      - name: supplier_id
+        description: Natural key for supplier.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('dim_supplier')
+              field: supplier_id
+      - name: on_time_delivery_pct
+        description: Supplier on-time delivery percentage.
+        data_tests:
+          - valid_percentage
+      - name: avg_lead_time
+        description: Average supplier lead time in days.
+        data_tests:
+          - positive_value
+      - name: delivery_count
+        description: Number of deliveries included in performance metrics.
+        data_tests:
+          - positive_value
+
+  - name: fact_production
+    description: Incremental production fact with efficiency and utilization metrics.
+    columns:
+      - name: fact_production_key
+        description: Surrogate key for production fact records.
+        data_tests:
+          - unique
+          - not_null
+      - name: production_order_id
+        description: Natural key for production order.
+        data_tests:
+          - unique
+          - not_null
+      - name: plant_id
+        description: Foreign key to plant dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_plant')
+              field: plant_id
+      - name: material_id
+        description: Foreign key to material dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_material')
+              field: material_id
+      - name: machine_id
+        description: Foreign key to machine dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_machine')
+              field: machine_id
+      - name: efficiency_pct
+        description: Production efficiency percentage.
+        data_tests:
+          - valid_percentage
+      - name: scrap_rate_pct
+        description: Production scrap rate percentage.
+        data_tests:
+          - valid_percentage
+      - name: avg_utilization_pct
+        description: Average machine utilization percentage during production.
+        data_tests:
+          - valid_percentage

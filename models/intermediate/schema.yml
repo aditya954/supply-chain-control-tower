@@ -1,0 +1,163 @@
+version: 2
+
+models:
+  - name: int_supplier_performance
+    description: Supplier delivery performance metrics aggregated by supplier.
+    columns:
+      - name: supplier_id
+        description: Primary key for supplier performance grain.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('stg_supplier')
+              field: supplier_id
+      - name: on_time_delivery_pct
+        description: Percentage of deliveries marked on time for the supplier.
+        data_tests:
+          - not_null
+          - valid_percentage
+      - name: avg_delay_days
+        description: Average delivery delay in days across supplier deliveries.
+        data_tests:
+          - not_null
+          - positive_value
+      - name: avg_lead_time
+        description: Average order-to-delivery lead time in days.
+        data_tests:
+          - not_null
+          - positive_value
+      - name: delivery_count
+        description: Total number of supplier deliveries in the aggregation window.
+        data_tests:
+          - not_null
+          - positive_value
+
+  - name: int_inventory_health
+    description: Inventory positions enriched with material cost and health indicators.
+    columns:
+      - name: inventory_id
+        description: Primary key for inventory position.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('stg_inventory')
+              field: inventory_id
+      - name: material_id
+        description: Foreign key to material master.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_material')
+              field: material_id
+      - name: warehouse_id
+        description: Foreign key to warehouse master.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_warehouse')
+              field: warehouse_id
+      - name: stockout_flag
+        description: True when available quantity equals zero.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+      - name: below_safety_stock
+        description: True when available quantity is below safety stock threshold.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+      - name: inventory_value
+        description: Available inventory value in USD.
+        data_tests:
+          - not_null
+          - positive_value
+
+  - name: int_shipment_delay
+    description: Shipment records enriched with transit duration and delay flags.
+    columns:
+      - name: shipment_id
+        description: Primary key for shipment.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('stg_shipments')
+              field: shipment_id
+      - name: delay_days
+        description: Number of days the shipment is delayed beyond expected delivery.
+        data_tests:
+          - not_null
+          - positive_value
+      - name: transit_days
+        description: Number of days between ship date and delivery date.
+        data_tests:
+          - not_null
+          - positive_value
+      - name: is_delayed
+        description: True when shipment exceeds on-time threshold or has delayed status.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+  - name: int_production_performance
+    description: Production order efficiency, scrap, and machine utilization metrics.
+    columns:
+      - name: production_order_id
+        description: Primary key for production order.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('stg_production_orders')
+              field: production_order_id
+      - name: efficiency_pct
+        description: Completed quantity divided by planned quantity expressed as a percentage.
+        data_tests:
+          - valid_percentage
+      - name: scrap_rate_pct
+        description: Scrap quantity divided by total produced quantity expressed as a percentage.
+        data_tests:
+          - valid_percentage
+      - name: avg_utilization_pct
+        description: Average machine utilization during the production order window.
+        data_tests:
+          - valid_percentage
+
+  - name: int_quality_metrics
+    description: Quality inspection metrics with defect enrichment at inspection grain.
+    columns:
+      - name: quality_inspection_id
+        description: Primary key for quality inspection.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('stg_quality_inspection')
+              field: quality_inspection_id
+      - name: plant_id
+        description: Foreign key to plant where inspection occurred.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_plant')
+              field: plant_id
+      - name: material_id
+        description: Foreign key to inspected material.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_material')
+              field: material_id
+      - name: first_pass_yield_pct
+        description: Passed quantity divided by inspected quantity expressed as a percentage.
+        data_tests:
+          - valid_percentage
+      - name: defect_rate_pct
+        description: Defect quantity divided by inspected quantity expressed as a percentage.
+        data_tests:
+          - valid_percentage
