@@ -147,6 +147,12 @@ def build_provider(cfg: EmbeddingConfig, cursor: Any) -> EmbeddingProvider:
     raise ValueError(f"Unsupported EMBEDDING_PROVIDER: {cfg.provider}")
 
 
+def format_vector_sql(vector: list[float], dimension: int) -> str:
+    """Snowflake vector literal: [1.0,2.0]::VECTOR(FLOAT, n)."""
+    literal = "[" + ",".join(str(float(v)) for v in vector) + "]"
+    return f"{literal}::VECTOR(FLOAT, {dimension})"
+
+
 def upsert_embeddings(
     cursor: Any,
     cfg: EmbeddingConfig,
@@ -157,7 +163,7 @@ def upsert_embeddings(
         raise ValueError("documents and vectors length mismatch")
 
     for doc, vector in zip(documents, vectors):
-        vector_literal = "[" + ",".join(str(float(v)) for v in vector) + "]"
+        vector_sql = format_vector_sql(vector, cfg.dimension)
         cursor.execute(
             f"""
             MERGE INTO {cfg.embeddings_table} AS target
@@ -168,7 +174,7 @@ def upsert_embeddings(
                     %s AS warehouse,
                     %s AS risk_level,
                     %s AS document_text,
-                    TO_VECTOR(%s)::VECTOR(FLOAT, {cfg.dimension}) AS embedding,
+                    {vector_sql} AS embedding,
                     %s AS embedding_model,
                     %s AS embedding_version,
                     %s AS document_hash
@@ -201,7 +207,6 @@ def upsert_embeddings(
                 doc.warehouse,
                 doc.risk_level,
                 doc.document_text,
-                vector_literal,
                 cfg.model,
                 cfg.version,
                 doc.document_hash,
