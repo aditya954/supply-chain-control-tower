@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: mart_ir_supply_chain_risk
+    description: >
+      Product-level supply chain risk mart with deterministic KPIs,
+      overall risk classification, and recommended actions.
+    columns:
+      - name: product_id
+        tests: [not_null, unique]
+      - name: stock_qty
+        tests: [not_null]
+      - name: daily_demand
+        tests: [not_null]
+      - name: days_of_supply
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: supplier_otd_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+      - name: overall_risk
+        tests:
+          - accepted_values:
+              values: ['LOW', 'HIGH', 'CRITICAL']
+      - name: recommended_action
+        tests:
+          - accepted_values:
+              values:
+                - MONITOR
+                - REVIEW_SUPPLIER
+                - EXPEDITE_REPLENISHMENT
+                - CONSIDER_REALLOCATION

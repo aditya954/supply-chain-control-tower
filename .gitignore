@@ -20,3 +20,10 @@ sample_data/
 # IDE local settings
 .claude/
 .vscode/
+.qodo/
+
+# OS / local artifacts
+.DS_Store
+gh_auth_output.txt
+.pytest_cache/
+.ruff_cache/

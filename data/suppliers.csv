@@ -1,0 +1,16 @@
+supplier_id,supplier_name,country,lead_time_days,otif_pct,quality_pct
+S01,Pacific Harvest Co,PH,12,93.4,96.6
+S02,Mediterranean Oils Ltd,IT,10,92.0,95.6
+S03,Nordic Dairy Group,SE,8,86.6,95.1
+S04,Andes Cocoa Partners,PE,18,71.9,87.3
+S05,Great Plains Grains,US,7,97.9,97.1
+S06,Alpine Spring Waters,CH,9,91.3,96.1
+S07,Sunrise Nutrition Labs,US,14,84.3,92.0
+S08,Gulf Packaging Inc,AE,16,66.3,91.2
+S09,Baltic Frozen Foods,PL,11,91.3,94.1
+S10,Amazonia Organics,BR,20,76.9,89.7
+S11,Tokyo Beverage Works,JP,13,93.5,95.1
+S12,Cape Citrus Exports,ZA,15,80.3,91.5
+S13,Himalaya Health Supply,IN,17,72.6,90.2
+S14,Canadian Maple Co,CA,10,96.7,98.2
+S15,Euro Pet Nutrition,DE,9,89.6,93.6

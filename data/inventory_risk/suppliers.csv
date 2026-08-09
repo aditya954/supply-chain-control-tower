@@ -1,0 +1,16 @@
+supplier_id,supplier_name,product_id,lead_time_days,supplier_otd_pct
+S001,ABC Personal Care Ltd,P001,7,72
+S002,Nordic Nutrition Co,P002,10,68
+S003,Baltic Frozen Foods,P003,12,75
+S004,Andes Cocoa Partners,P004,8,78
+S005,Pacific Beverage Inc,P005,6,76
+S006,Alpine Health Supply,P006,9,79
+S007,Mediterranean Oils SA,P007,7,92
+S008,Great Plains Grains,P008,5,94
+S009,Sunrise Snacks LLC,P009,6,91
+S010,Alpine Spring Waters,P010,5,97
+S011,Tokyo Tea Works,P011,8,96
+S012,Himalaya Rice Exports,P012,14,95
+S013,Euro Household GmbH,P013,7,93
+S014,Asia Pacific Hygiene,P014,10,88
+S015,Wellness Labs Inc,P015,7,77

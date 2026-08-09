@@ -1,0 +1,144 @@
+version: 2
+
+models:
+  - name: stg_ct_products
+    description: Staged product master for consumer-products control tower.
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+      - name: product_name
+        tests: [not_null]
+
+  - name: stg_ct_warehouses
+    description: Staged warehouse master with capacity attributes.
+    columns:
+      - name: warehouse_id
+        tests: [unique, not_null]
+      - name: capacity
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: used_capacity
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: stg_ct_suppliers
+    description: Staged supplier master with OTIF and quality percentages.
+    columns:
+      - name: supplier_id
+        tests: [unique, not_null]
+      - name: otif_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+      - name: quality_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+
+  - name: stg_ct_inventory
+    description: Staged inventory snapshots with deduplication by product, warehouse, and date.
+    columns:
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_ct_products')
+              field: product_id
+      - name: warehouse_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_ct_warehouses')
+              field: warehouse_id
+      - name: stock_qty
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: reserved_qty
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: available_qty
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: stg_ct_demand
+    description: Staged demand history and forward forecast records.
+    columns:
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_ct_products')
+              field: product_id
+      - name: warehouse_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_ct_warehouses')
+              field: warehouse_id
+      - name: demand_record_type
+        tests:
+          - accepted_values:
+              values: ['ACTUAL', 'FORECAST']
+
+  - name: stg_ct_purchase_orders
+    description: Staged purchase orders with standardized status values.
+    columns:
+      - name: po_id
+        tests: [unique, not_null]
+      - name: product_id
+        tests:
+          - relationships:
+              to: ref('stg_ct_products')
+              field: product_id
+      - name: supplier_id
+        tests:
+          - relationships:
+              to: ref('stg_ct_suppliers')
+              field: supplier_id
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['OPEN', 'PARTIAL', 'RECEIVED', 'CANCELLED']
+
+  - name: stg_ct_shipments
+    description: Staged inbound shipments linked to purchase orders.
+    columns:
+      - name: shipment_id
+        tests: [unique, not_null]
+      - name: po_id
+        tests:
+          - relationships:
+              to: ref('stg_ct_purchase_orders')
+              field: po_id
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['IN_TRANSIT', 'DELIVERED', 'DELAYED', 'CANCELLED']
+
+  - name: stg_ct_sales_orders
+    description: Staged customer sales orders with fulfillment status.
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: product_id
+        tests:
+          - relationships:
+              to: ref('stg_ct_products')
+              field: product_id
+      - name: warehouse_id
+        tests:
+          - relationships:
+              to: ref('stg_ct_warehouses')
+              field: warehouse_id
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['OPEN', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'BACKORDER', 'CANCELLED']

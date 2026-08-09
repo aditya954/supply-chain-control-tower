@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Secrets and local env
+.env
+*.p8
+*.pem
+
+# dbt artifacts
+target/
+dbt_packages/
+logs/
+
+# Git / IDE
+.git/
+.gitignore
+.claude/
+.vscode/
+.DS_Store
+
+# Large optional datasets
+sample_data/
+gh_auth_output.txt
+
+# Docker
+Dockerfile*

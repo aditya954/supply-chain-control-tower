@@ -1,0 +1,9 @@
+# Evaluation questions for RAG quality checks (Phase 7+)
+question,expected_entities,expected_sources,expected_risk,expected_facts
+"Which products are at critical risk?","P001;P002;P003","DOC_P001","CRITICAL","days of supply"
+"Why is Coconut Body Wash at risk?","P001;Coconut Body Wash","DOC_P001;PO001","CRITICAL","0.5 days"
+"Which suppliers are causing the biggest problems?","S001;ABC Personal Care","DOC_P001","CRITICAL","OTD 72%"
+"Which purchase orders require attention?","PO001;DELAYED","DOC_P001","CRITICAL","DELAYED"
+"What should the supply-chain planner do today?","EXPEDITE_REPLENISHMENT","DOC_P001","CRITICAL","replenishment"
+"Which products may run out of stock?","P001;P002;P003","DOC_P001","CRITICAL","stockout"
+"Why is P999 critical?","","","","Insufficient data"

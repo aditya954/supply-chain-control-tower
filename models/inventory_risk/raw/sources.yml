@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: raw_inventory_risk
+    description: Simple inventory-risk assistant source tables (IR_* prefix) in RAW schema.
+    database: ANALYTICS
+    schema: RAW
+    loader: python_pandas
+    tables:
+      - name: ir_inventory
+        identifier: IR_INVENTORY
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 30, period: minute}
+          error_after: {count: 2, period: hour}
+
+      - name: ir_suppliers
+        identifier: IR_SUPPLIERS
+        loaded_at_field: _loaded_at
+
+      - name: ir_purchase_orders
+        identifier: IR_PURCHASE_ORDERS
+        loaded_at_field: _loaded_at
+
+      - name: ir_shipments
+        identifier: IR_SHIPMENTS
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 1, period: hour}
+          error_after: {count: 6, period: hour}
+
+      - name: ir_forecast
+        identifier: IR_FORECAST
+        loaded_at_field: _loaded_at

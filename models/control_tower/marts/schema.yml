@@ -1,0 +1,99 @@
+version: 2
+
+models:
+  - name: int_ct_supplier_performance
+    description: Supplier OTD, OTIF, lead time, and risk indicators.
+    columns:
+      - name: supplier_id
+        tests: [unique, not_null]
+      - name: supplier_otd_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+      - name: supplier_otif_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+
+  - name: int_ct_order_fulfillment
+    description: Customer fill rate, backorder rate, and OTIF by product and warehouse.
+    columns:
+      - name: fill_rate_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+      - name: backorder_rate_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+
+  - name: int_ct_warehouse_utilization
+    description: Warehouse utilization and inventory concentration by product.
+    columns:
+      - name: warehouse_utilization_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+
+  - name: mart_ct_inventory_health
+    description: Inventory health mart with days of supply and stockout risk flags.
+    columns:
+      - name: product_id
+        tests: [not_null]
+      - name: warehouse_id
+        tests: [not_null]
+
+  - name: mart_ct_supplier_health
+    description: Supplier performance mart for control tower analytics.
+    columns:
+      - name: supplier_id
+        tests: [unique, not_null]
+
+  - name: mart_ct_shipment_health
+    description: Shipment delay and on-time performance mart.
+    columns:
+      - name: product_id
+        tests: [not_null]
+      - name: supplier_id
+        tests: [not_null]
+
+  - name: mart_ct_customer_fulfillment
+    description: Customer order fulfillment and impact mart.
+    columns:
+      - name: fill_rate_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+      - name: backorder_rate_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+
+  - name: mart_ct_demand_health
+    description: Forecast accuracy, bias, and demand variance mart.
+    columns:
+      - name: product_id
+        tests: [not_null]
+      - name: warehouse_id
+        tests: [not_null]
+
+  - name: mart_ct_supply_chain_risk
+    description: >
+      Unified risk signals by product and warehouse. Final risk_score and risk_level
+      are added in Phase 3 (semantic layer).
+    columns:
+      - name: product_id
+        tests: [not_null]
+      - name: warehouse_id
+        tests: [not_null]
+      - name: risk_signal_count
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
