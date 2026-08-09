@@ -1,0 +1,3 @@
+[tool.ruff.lint.per-file-ignores]
+"scripts/**" = ["EXE001", "BLE001"]
+"src/application/cli.py" = ["EXE001", "BLE001"]

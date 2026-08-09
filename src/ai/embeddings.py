@@ -283,8 +283,8 @@ def main(argv: list[str] | None = None) -> int:
             f"skipped={result['skipped']}, total={result['total_documents']}"
         )
         return 0
-    except Exception as exc:
-        logger.exception("embedding_sync_failed error=%s", exc)
+    except Exception:
+        logger.exception("embedding_sync_failed")
         return 1
 
 

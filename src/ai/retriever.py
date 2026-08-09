@@ -246,8 +246,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"\n--- Result {i} | score={doc.similarity_score:.4f} | {doc.document_id} ---")
             print(doc.document_text[:500])
         return 0
-    except Exception as exc:
-        logger.exception("retrieval_failed error=%s", exc)
+    except Exception:
+        logger.exception("retrieval_failed")
         return 1
 
 

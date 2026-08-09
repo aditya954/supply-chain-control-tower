@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import csv
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -14,8 +14,8 @@ from config import (
     DEFECT_TYPES,
     MASTER_ROW_COUNTS,
     PO_STATUSES,
-    RETURN_REASONS,
     RANDOM_SEED,
+    RETURN_REASONS,
     SHIPMENT_STATUSES,
     TRANSACTIONAL_DIR,
     TRANSACTIONAL_ROW_COUNTS,
@@ -209,7 +209,10 @@ def generate_production_transactions(production_orders: list[dict]) -> list[dict
 def generate_machine_sensor_readings() -> list[dict]:
     rows = []
     for reading_id in range(1, TRANSACTIONAL_ROW_COUNTS["machine_sensor_readings"] + 1):
-        reading_time = fake.date_time_between(datetime(2025, 1, 1), datetime(2026, 3, 1))
+        reading_time = fake.date_time_between(
+            datetime(2025, 1, 1, tzinfo=timezone.utc),
+            datetime(2026, 3, 1, tzinfo=timezone.utc),
+        )
         utilization = round(float(np.random.uniform(60, 100)), 2)
         rows.append(
             {
