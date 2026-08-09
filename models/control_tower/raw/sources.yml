@@ -1,0 +1,67 @@
+version: 2
+
+sources:
+  - name: raw_control_tower
+    description: >
+      Consumer-products supply chain control tower source tables (CT_* prefix).
+      Loaded from data/*.csv via scripts/load_control_tower_to_snowflake.py.
+    database: ANALYTICS
+    schema: RAW
+    loader: python_pandas
+    tables:
+      - name: ct_products
+        identifier: CT_PRODUCTS
+        description: Product master for control tower domain.
+        columns:
+          - name: product_id
+            description: Primary key for product.
+
+      - name: ct_warehouses
+        identifier: CT_WAREHOUSES
+        description: Warehouse master with capacity attributes.
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 48, period: hour}
+
+      - name: ct_suppliers
+        identifier: CT_SUPPLIERS
+        description: Supplier master with OTIF and quality metrics.
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 48, period: hour}
+
+      - name: ct_inventory
+        identifier: CT_INVENTORY
+        description: Inventory positions by product, warehouse, and snapshot date.
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 30, period: minute}
+          error_after: {count: 2, period: hour}
+
+      - name: ct_demand
+        identifier: CT_DEMAND
+        description: Actual and forecast demand by product, warehouse, and date.
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 48, period: hour}
+
+      - name: ct_purchase_orders
+        identifier: CT_PURCHASE_ORDERS
+        description: Purchase order lines with receipt and status tracking.
+        loaded_at_field: _loaded_at
+
+      - name: ct_shipments
+        identifier: CT_SHIPMENTS
+        description: Inbound shipments linked to purchase orders.
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 1, period: hour}
+          error_after: {count: 6, period: hour}
+
+      - name: ct_sales_orders
+        identifier: CT_SALES_ORDERS
+        description: Customer sales orders with fulfillment status.
+        loaded_at_field: _loaded_at

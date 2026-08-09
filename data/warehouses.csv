@@ -1,0 +1,9 @@
+warehouse_id,warehouse_name,country,capacity,used_capacity
+W01,London DC,UK,50000,25446
+W02,Rotterdam DC,NL,60000,55800
+W03,Chicago DC,US,80000,44000
+W04,Dallas DC,US,70000,63898
+W05,Singapore DC,SG,45000,36479
+W06,Sydney DC,AU,40000,35049
+W07,Toronto DC,CA,55000,28701
+W08,Mumbai DC,IN,65000,35984

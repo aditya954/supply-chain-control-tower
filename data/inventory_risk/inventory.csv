@@ -1,0 +1,16 @@
+product_id,product_name,warehouse,stock_qty,daily_demand,snapshot_date
+P001,Coconut Body Wash,LON,50,100,2026-08-09
+P002,Baby Formula Stage 1,NYC,120,200,2026-08-09
+P003,Frozen Pizza Margherita,CHI,80,150,2026-08-09
+P004,Dark Chocolate 70%,LON,180,120,2026-08-09
+P005,Energy Drink Citrus,NYC,200,140,2026-08-09
+P006,Sunscreen SPF50,AMS,90,70,2026-08-09
+P007,Olive Oil Extra Virgin,LON,400,80,2026-08-09
+P008,Whole Grain Pasta,NYC,350,60,2026-08-09
+P009,Granola Honey Crunch,CHI,280,50,2026-08-09
+P010,Sparkling Mineral Water,LON,2000,100,2026-08-09
+P011,Green Tea Organic,NYC,1500,90,2026-08-09
+P012,Basmati Rice 5kg,CHI,3000,120,2026-08-09
+P013,Laundry Detergent Pods,AMS,600,40,2026-08-09
+P014,Hand Soap Lavender,SIN,450,55,2026-08-09
+P015,Vitamin C Tablets,LON,220,45,2026-08-09

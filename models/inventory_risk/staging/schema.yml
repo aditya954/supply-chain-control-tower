@@ -1,0 +1,80 @@
+version: 2
+
+models:
+  - name: stg_ir_inventory
+    description: Staged inventory with type casting and deduplication.
+    columns:
+      - name: product_id
+        tests: [not_null, unique]
+      - name: stock_qty
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: daily_demand
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: stg_ir_suppliers
+    description: Staged supplier master linked to products.
+    columns:
+      - name: supplier_id
+        tests: [not_null, unique]
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_ir_inventory')
+              field: product_id
+      - name: supplier_otd_pct
+        tests:
+          - valid_percentage:
+              min_value: 0
+              max_value: 100
+
+  - name: stg_ir_purchase_orders
+    description: Staged purchase orders with standardized status.
+    columns:
+      - name: po_id
+        tests: [not_null, unique]
+      - name: product_id
+        tests:
+          - relationships:
+              to: ref('stg_ir_inventory')
+              field: product_id
+      - name: supplier_id
+        tests:
+          - relationships:
+              to: ref('stg_ir_suppliers')
+              field: supplier_id
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['OPEN', 'RECEIVED', 'DELAYED']
+
+  - name: stg_ir_shipments
+    description: Staged shipments linked to purchase orders.
+    columns:
+      - name: shipment_id
+        tests: [not_null, unique]
+      - name: po_id
+        tests:
+          - relationships:
+              to: ref('stg_ir_purchase_orders')
+              field: po_id
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['ON_TIME', 'DELAYED', 'IN_TRANSIT']
+
+  - name: stg_ir_forecast
+    description: Staged demand forecast by product and date.
+    columns:
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_ir_inventory')
+              field: product_id

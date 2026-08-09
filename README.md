@@ -1,158 +1,112 @@
-# Enterprise Supply Chain Control Tower
+# AI Supply Chain — Snowflake + dbt + RAG
 
-## Overview
+**Interview demo:** ask supply-chain risk questions in natural language, with KPIs computed in Snowflake/dbt and answers grounded in retrieved enterprise context.
 
-| Attribute | Value |
-|-----------|-------|
-| **Domain** | Manufacturing / Automotive Supply Chain |
-| **Platform** | Snowflake + dbt Core + Python |
-| **Database** | `ANALYTICS` (schemas: `RAW`, `STAGING`, `INTERMEDIATE`, `MART`) |
+---
 
-## Architecture
+## Inventory Risk Assistant (recommended demo path)
 
-```
-ERP/MES/TMS/QMS (simulated CSV)
-        │
-        ▼
-   RAW schema          ← Python load script
-        │
-        ▼
-   raw_* views         ← dbt sources
-        │
-        ▼
-   stg_* views         ← STAGING schema
-        │
-        ▼
-   int_* views         ← INTERMEDIATE schema
-        │
-        ├─► dim_* tables
-        ├─► fact_* tables (incremental)
-        ├─► kpi_* tables
-        └─► snap_* snapshots (SCD2)
+Simple end-to-end track — 15 products, 5 CSVs, full AI pipeline.
+
+```text
+CSV → Snowflake RAW → dbt → AI context → Embeddings → RAG → CLI
 ```
 
-## Folder Structure
-
-```
-├── analyses/           # Ad-hoc analytical SQL
-├── docs/               # Additional documentation
-├── macros/             # Reusable SQL macros + generic tests
-├── models/
-│   ├── raw/            # Source-aligned views (raw_*)
-│   ├── staging/        # Cleaned data (stg_*)
-│   ├── intermediate/   # Business logic (int_*)
-│   └── marts/
-│       ├── dimensions/ # dim_*
-│       ├── facts/      # fact_* (incremental)
-│       └── kpis/       # kpi_*
-├── sample_data/        # Generated CSV files
-├── scripts/            # Python data gen + Snowflake load
-├── seeds/              # Optional dbt seeds
-├── snapshots/          # SCD Type 2 history
-└── tests/              # Singular data tests
-```
-
-## Quick Start
-
-### 1. Install dependencies
+### Quick start
 
 ```bash
 pip install -r requirements.txt
+cp .env.example .env                    # Snowflake key-pair + LLM_API_KEY
+
+export DBT_PROFILES_DIR=$(pwd)
+
+# Data + dbt
+python3 scripts/generate_inventory_risk_data.py
+python3 scripts/load_inventory_risk_to_snowflake.py
+dbt build --select inventory_risk
+
+# AI layer
+python -m src.ai.embeddings
+python -m src.application.cli -q "Which products are at critical risk?"
 ```
 
-### 2. Generate sample data
+### Docker
 
 ```bash
-python3 scripts/generate_all_data.py
+docker build -t inventory-risk-assistant .
+docker run -it --rm --env-file .env \
+  -v $HOME/.dbt/snowflake_keys/rsa_key.p8:/secrets/key.p8:ro \
+  -e SNOWFLAKE_PRIVATE_KEY_PATH=/secrets/key.p8 \
+  inventory-risk-assistant -q "Why is Coconut Body Wash at risk?"
 ```
 
-### 3. Configure Snowflake
+### Documentation
 
-Copy `.env.example` to `.env` and set credentials. The project `profiles.yml` uses:
+| Doc | Contents |
+|-----|----------|
+| [docs/project_context.md](docs/project_context.md) | Repo inspection + phase status |
+| [docs/architecture.md](docs/architecture.md) | System design + Mermaid diagram |
+| [docs/kpi_definitions.md](docs/kpi_definitions.md) | Deterministic KPI rules |
+| [docs/deployment.md](docs/deployment.md) | Docker + GitHub Actions secrets |
+| [docs/testing.md](docs/testing.md) | Test commands |
+| [models/inventory_risk/README.md](models/inventory_risk/README.md) | dbt model map |
 
-- Database: `SUPPLY_CHAIN_DB`
-- Warehouse: `DBT_WH`
-- Auth: Snowflake key-pair
+### Example question
 
-### 4. Load RAW tables into Snowflake
+> "Why is Coconut Body Wash at risk?"
+
+> CRITICAL — 50 units vs 100 daily demand (0.5 days of supply), supplier OTD 72%, delayed PO/shipment → **EXPEDITE_REPLENISHMENT**
+
+---
+
+## Other tracks in this repo
+
+| Track | Folder | When to use |
+|-------|--------|-------------|
+| **Control Tower (complex)** | `models/control_tower/` | 30-product demo with `CT_*` tables |
+| **Legacy automotive** | `models/raw`, `marts/` | Enterprise dbt reference |
+
+See original Control Tower quick start below.
+
+---
+
+## Control Tower (complex track)
+
+**Interview demo project** — consumer-products pipeline with 30 products, 8 warehouses, embedded risk scenarios.
+
+> A legacy automotive/manufacturing dbt track also lives in this repo as optional reference.
+
+### Two-track diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  CONTROL TOWER (complex demo)                                           │
+│  data/*.csv → Snowflake RAW.CT_* → models/control_tower/ → MART marts   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  INVENTORY RISK ASSISTANT (simple E2E — recommended)                   │
+│  data/inventory_risk/ → IR_* → models/inventory_risk/ → RAG → CLI        │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Control Tower quick start
 
 ```bash
-python3 scripts/load_to_snowflake.py
+pip install -r requirements.txt
+cp .env.example .env
+export DBT_PROFILES_DIR=$(pwd)
+
+python3 scripts/load_control_tower_to_snowflake.py
+dbt build --select control_tower
 ```
 
-### 5. Run dbt
+---
 
-```bash
-export DBT_PROFILES_DIR=/Users/aditya954/dbt_project
-dbt deps
-dbt build
-dbt docs generate && dbt docs serve
-```
+## GitHub Actions CI/CD
 
-## dbt Commands
+Pipeline: `lint` → `unit_test` → `dbt_compile` → `dbt_test` → `ai_test` → `docker_build`
 
-```bash
-# Full pipeline
-dbt build
+See [docs/deployment.md](docs/deployment.md) for required GitHub secrets.
 
-# Layer by layer
-dbt build --select staging.*
-dbt build --select intermediate.*
-dbt build --select marts.dimensions.*
-dbt build --select marts.facts.*
-dbt build --select marts.kpis.*
-
-# Snapshots only
-dbt snapshot
-
-# Tests only
-dbt test
-
-# Source freshness
-dbt source freshness
-
-# Incremental full refresh
-dbt build --select fact_inventory --full-refresh
-```
-
-## Business KPIs
-
-| KPI | Model |
-|-----|-------|
-| Inventory Turnover | `kpi_supply_chain_control_tower` |
-| Days of Inventory | `kpi_supply_chain_control_tower` |
-| Inventory Age | `kpi_supply_chain_control_tower` |
-| Stockout Rate | `kpi_supply_chain_control_tower` |
-| Supplier On-Time Delivery | `kpi_supply_chain_control_tower` |
-| Supplier Lead Time | `kpi_supply_chain_control_tower` |
-| Production Efficiency | `kpi_supply_chain_control_tower` |
-| Machine Utilisation | `kpi_supply_chain_control_tower` |
-| Scrap Rate | `kpi_supply_chain_control_tower` |
-| First Pass Yield | `kpi_supply_chain_control_tower` |
-| Shipment Delay Rate | `kpi_supply_chain_control_tower` |
-| Average Transit Time | `kpi_supply_chain_control_tower` |
-| Quality Defect Rate | `kpi_supply_chain_control_tower` |
-| Warranty Claim Rate | `kpi_supply_chain_control_tower` |
-
-## Data Volume
-
-| Type | Tables | Rows |
-|------|--------|------|
-| Master | 9 | ~1,000 each (calendar: 4,018) |
-| Transactional | 16 | 100,000+ each |
-
-## Testing
-
-- **Generic tests**: unique, not_null, relationships, accepted_values
-- **Custom tests**: `positive_value`, `valid_percentage`
-- **Singular tests**: `tests/assert_*.sql`
-- **Unit tests**: defined in `models/staging/schema.yml`
-- **Source freshness**: configured in `models/raw/sources.yml`
-
-## Deployment
-
-1. Create `SUPPLY_CHAIN_DB` and schemas via load script
-2. Schedule `scripts/load_to_snowflake.py` for RAW ingestion
-3. Run `dbt build` in CI/CD on merge to main
-4. Run snapshots daily for SCD2 history
-5. Exclude unit tests in production: `dbt build --exclude-resource-type unit_test`
+Remote: `https://github.com/aditya954/supply-chain-control-tower`

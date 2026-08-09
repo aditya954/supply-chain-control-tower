@@ -57,6 +57,37 @@ models:
       kpis:
         +materialized: table
         +tags: ['kpi']
+    control_tower:
+      +tags: ['control_tower']
+      raw:
+        +schema: RAW
+        +materialized: view
+      staging:
+        +schema: STAGING
+        +materialized: view
+      intermediate:
+        +schema: INTERMEDIATE
+        +materialized: view
+      marts:
+        +schema: MART
+        +materialized: table
+    inventory_risk:
+      +tags: ['inventory_risk']
+      raw:
+        +schema: RAW
+        +materialized: view
+      staging:
+        +schema: STAGING
+        +materialized: view
+      intermediate:
+        +schema: INTERMEDIATE
+        +materialized: view
+      marts:
+        +schema: MART
+        +materialized: table
+      ai:
+        +schema: AI
+        +materialized: table
 
 snapshots:
   supply_chain_control_tower:

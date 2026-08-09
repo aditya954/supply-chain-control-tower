@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: ai_ir_supply_chain_context
+    description: >
+      AI-ready supply chain context documents built from mart_ir_supply_chain_risk.
+      Interface between deterministic dbt KPIs and the Python embedding/RAG layer.
+    columns:
+      - name: document_id
+        description: Stable document identifier (DOC_{product_id}).
+        tests: [unique, not_null]
+      - name: product_id
+        tests: [not_null]
+      - name: warehouse
+        tests: [not_null]
+      - name: risk_level
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LOW', 'HIGH', 'CRITICAL']
+      - name: document_text
+        tests: [not_null]
+      - name: document_hash
+        description: SHA-256 hash of document_text for incremental embedding.
+        tests: [not_null, unique]
+      - name: updated_at
+        tests: [not_null]
