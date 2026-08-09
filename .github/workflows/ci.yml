@@ -58,6 +58,8 @@ jobs:
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: dbt deps & compile
+        env:
+          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ci-compile-only
         run: |
           dbt deps
           dbt compile --select tag:inventory_risk
