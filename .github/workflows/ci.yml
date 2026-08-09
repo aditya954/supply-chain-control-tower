@@ -45,8 +45,8 @@ jobs:
       - name: Pytest
         run: python -m pytest tests/unit/ -v --tb=short
 
-  dbt_compile:
-    name: dbt compile
+  dbt_parse:
+    name: dbt parse
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -57,17 +57,19 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: dbt deps & compile
+      - name: dbt deps & parse
         env:
-          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ci-compile-only
+          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ci-parse-only
+          SNOWFLAKE_PRIVATE_KEY_PATH: /tmp/ci_dummy_key.p8
         run: |
+          touch /tmp/ci_dummy_key.p8
           dbt deps
-          dbt compile --select tag:inventory_risk
+          dbt parse
 
   dbt_test:
     name: dbt build (Snowflake)
     runs-on: ubuntu-latest
-    needs: [unit_test, dbt_compile]
+    needs: [unit_test, dbt_parse]
     if: vars.ENABLE_SNOWFLAKE_CI == 'true'
     steps:
       - uses: actions/checkout@v4
@@ -145,7 +147,7 @@ jobs:
   docker_build:
     name: Docker build
     runs-on: ubuntu-latest
-    needs: [ai_test, dbt_compile]
+    needs: [ai_test, dbt_parse]
     steps:
       - uses: actions/checkout@v4
       - name: Build image
