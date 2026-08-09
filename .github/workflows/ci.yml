@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+env:
+  PYTHON_VERSION: "3.11"
+  DBT_PROFILES_DIR: ${{ github.workspace }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff
+      - name: Ruff
+        run: ruff check src tests scripts
+      - name: Compile check
+        run: python -m compileall src scripts
+
+  unit_test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Pytest
+        run: python -m pytest tests/unit/ -v --tb=short
+
+  dbt_compile:
+    name: dbt compile
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: dbt deps & compile
+        run: |
+          dbt deps
+          dbt compile --select tag:inventory_risk
+
+  dbt_test:
+    name: dbt build (Snowflake)
+    runs-on: ubuntu-latest
+    needs: [unit_test, dbt_compile]
+    if: vars.ENABLE_SNOWFLAKE_CI == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Configure Snowflake key
+        env:
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+        run: |
+          echo "$SNOWFLAKE_PRIVATE_KEY" | base64 -d > /tmp/snowflake_key.p8
+          chmod 600 /tmp/snowflake_key.p8
+      - name: dbt build
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+          SNOWFLAKE_PRIVATE_KEY_PATH: /tmp/snowflake_key.p8
+        run: |
+          dbt deps
+          dbt build --select tag:inventory_risk
+
+  ai_test:
+    name: AI tests (mocked)
+    runs-on: ubuntu-latest
+    needs: unit_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: RAG tests
+        run: python -m pytest tests/ai/test_rag.py -v --tb=short
+
+  integration_test:
+    name: Integration tests (Snowflake)
+    runs-on: ubuntu-latest
+    needs: dbt_test
+    if: vars.ENABLE_SNOWFLAKE_CI == 'true'
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Configure Snowflake key
+        env:
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+        run: |
+          echo "$SNOWFLAKE_PRIVATE_KEY" | base64 -d > /tmp/snowflake_key.p8
+          chmod 600 /tmp/snowflake_key.p8
+      - name: Retriever integration tests
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+          SNOWFLAKE_PRIVATE_KEY_PATH: /tmp/snowflake_key.p8
+        run: python -m pytest tests/ai/test_retriever.py -v --tb=short
+
+  docker_build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    needs: [ai_test, dbt_compile]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t inventory-risk-assistant:${{ github.sha }} .
