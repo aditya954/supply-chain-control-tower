@@ -83,9 +83,15 @@ jobs:
       - name: Configure Snowflake key
         env:
           SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}
         run: |
-          echo "$SNOWFLAKE_PRIVATE_KEY" | base64 -d > /tmp/snowflake_key.p8
+          if echo "$SNOWFLAKE_PRIVATE_KEY" | grep -q "BEGIN"; then
+            printf '%s\n' "$SNOWFLAKE_PRIVATE_KEY" > /tmp/snowflake_key.p8
+          else
+            echo "$SNOWFLAKE_PRIVATE_KEY" | tr -d ' \n\r\t' | base64 -d > /tmp/snowflake_key.p8
+          fi
           chmod 600 /tmp/snowflake_key.p8
+          openssl pkey -in /tmp/snowflake_key.p8 -passin pass:"$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE" -noout
       - name: dbt build
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
@@ -131,9 +137,15 @@ jobs:
       - name: Configure Snowflake key
         env:
           SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}
         run: |
-          echo "$SNOWFLAKE_PRIVATE_KEY" | base64 -d > /tmp/snowflake_key.p8
+          if echo "$SNOWFLAKE_PRIVATE_KEY" | grep -q "BEGIN"; then
+            printf '%s\n' "$SNOWFLAKE_PRIVATE_KEY" > /tmp/snowflake_key.p8
+          else
+            echo "$SNOWFLAKE_PRIVATE_KEY" | tr -d ' \n\r\t' | base64 -d > /tmp/snowflake_key.p8
+          fi
           chmod 600 /tmp/snowflake_key.p8
+          openssl pkey -in /tmp/snowflake_key.p8 -passin pass:"$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE" -noout
       - name: Retriever integration tests
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
