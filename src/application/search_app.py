@@ -2,10 +2,31 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# Ensure project root is on path when launched via streamlit
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 import streamlit as st
 
 from src.ai.rag import INSUFFICIENT_DATA, SupplyChainRAG
 from src.ai.retriever import RetrievalFilters, retrieve
+
+
+@st.cache_resource
+def _warm_embedding_model() -> bool:
+    """Load local embedding model once per Streamlit session (~10s first time)."""
+    from src.ai.embeddings import LocalEmbeddingProvider
+    from src.config import load_config
+
+    cfg = load_config()
+    if cfg.embedding.provider == "local":
+        LocalEmbeddingProvider(cfg.embedding.model)
+    return True
+
+
+_warm_embedding_model()
 
 st.set_page_config(
     page_title="Inventory Risk Search",
@@ -38,7 +59,7 @@ if st.button("Search", type="primary") and query.strip():
     )
 
     if mode == "Semantic search":
-        with st.spinner("Running vector search..."):
+        with st.spinner("Running vector search (first query may take ~10s while model loads)..."):
             docs = retrieve(query, top_k=top_k, filters=filters, hybrid=hybrid)
 
         if not docs:

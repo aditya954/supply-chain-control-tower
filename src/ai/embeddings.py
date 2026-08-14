@@ -10,7 +10,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from src.config import AppConfig, EmbeddingConfig, load_config
 from src.logging_config import configure_logging, new_request_id
@@ -58,15 +58,20 @@ class CortexEmbeddingProvider(EmbeddingProvider):
 
 
 class LocalEmbeddingProvider(EmbeddingProvider):
+    _model_cache: ClassVar[dict[str, Any]] = {}
+
     def __init__(self, model_name: str) -> None:
-        try:
-            from sentence_transformers import SentenceTransformer
-        except ImportError as exc:
-            raise ImportError(
-                "Install sentence-transformers for local embeddings: "
-                "pip install sentence-transformers"
-            ) from exc
-        self.model = SentenceTransformer(model_name)
+        if model_name not in self._model_cache:
+            try:
+                from sentence_transformers import SentenceTransformer
+            except ImportError as exc:
+                raise ImportError(
+                    "Install sentence-transformers for local embeddings: "
+                    "pip install sentence-transformers"
+                ) from exc
+            logger.info("loading_embedding_model model=%s", model_name)
+            self._model_cache[model_name] = SentenceTransformer(model_name)
+        self.model = self._model_cache[model_name]
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         return self.model.encode(texts, normalize_embeddings=True).tolist()
