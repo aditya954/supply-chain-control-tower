@@ -9,7 +9,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from src.ai.embeddings import build_provider
+from src.ai.embeddings import build_provider, format_vector_sql
 from src.config import AppConfig, load_config
 from src.logging_config import configure_logging, new_request_id
 from src.snowflake_client import get_connection
@@ -122,7 +122,7 @@ class SupplyChainRetriever:
 
             provider = build_provider(cfg.embedding, cursor)
             query_vector = provider.embed([query])[0]
-            vector_literal = "[" + ",".join(str(float(v)) for v in query_vector) + "]"
+            vector_sql = format_vector_sql(query_vector, cfg.embedding.dimension)
 
             sql = f"""
                 SELECT
@@ -135,14 +135,14 @@ class SupplyChainRetriever:
                     embedding_model,
                     VECTOR_COSINE_SIMILARITY(
                         embedding,
-                        TO_VECTOR(%s)::VECTOR(FLOAT, {cfg.embedding.dimension})
+                        {vector_sql}
                     ) AS similarity_score
                 FROM {table}
                 {where_sql}
                 ORDER BY similarity_score DESC
                 LIMIT %s
             """
-            params: list[Any] = [vector_literal, *where_params, top_k]
+            params: list[Any] = [*where_params, top_k]
             cursor.execute(sql, params)
             rows = cursor.fetchall()
 
@@ -246,8 +246,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"\n--- Result {i} | score={doc.similarity_score:.4f} | {doc.document_id} ---")
             print(doc.document_text[:500])
         return 0
-    except Exception as exc:
-        logger.exception("retrieval_failed error=%s", exc)
+    except Exception:
+        logger.exception("retrieval_failed")
         return 1
 
 

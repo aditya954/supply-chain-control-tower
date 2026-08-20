@@ -10,12 +10,14 @@ from pathlib import Path
 import numpy as np
 from faker import Faker
 
-from config import MASTER_DIR, MASTER_ROW_COUNTS, RANDOM_SEED
 from config import (
     CARRIER_MODES,
+    MASTER_DIR,
+    MASTER_ROW_COUNTS,
     MATERIAL_CATEGORIES,
     MATERIAL_TYPES,
     PLANT_REGIONS,
+    RANDOM_SEED,
 )
 
 fake = Faker()

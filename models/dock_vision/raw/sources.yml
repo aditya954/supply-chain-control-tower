@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: raw_dock_vision
+    description: DockVision truck load inspection source tables (DV_* prefix) in RAW schema.
+    database: ANALYTICS
+    schema: RAW
+    loader: python_pandas
+    tables:
+      - name: dv_load_inspections
+        identifier: DV_LOAD_INSPECTIONS
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 30, period: minute}
+          error_after: {count: 2, period: hour}

@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from src.ai.prompts import SYSTEM_PROMPT, build_context_block, build_user_prompt
-from src.ai.retriever import RetrievedDocument, RetrievalFilters, SupplyChainRetriever
+from src.ai.retriever import RetrievalFilters, RetrievedDocument, SupplyChainRetriever
 from src.config import AppConfig, LLMConfig, load_config
 from src.snowflake_client import get_connection
 

@@ -10,7 +10,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from src.config import AppConfig, EmbeddingConfig, load_config
 from src.logging_config import configure_logging, new_request_id
@@ -58,15 +58,20 @@ class CortexEmbeddingProvider(EmbeddingProvider):
 
 
 class LocalEmbeddingProvider(EmbeddingProvider):
+    _model_cache: ClassVar[dict[str, Any]] = {}
+
     def __init__(self, model_name: str) -> None:
-        try:
-            from sentence_transformers import SentenceTransformer
-        except ImportError as exc:
-            raise ImportError(
-                "Install sentence-transformers for local embeddings: "
-                "pip install sentence-transformers"
-            ) from exc
-        self.model = SentenceTransformer(model_name)
+        if model_name not in self._model_cache:
+            try:
+                from sentence_transformers import SentenceTransformer
+            except ImportError as exc:
+                raise ImportError(
+                    "Install sentence-transformers for local embeddings: "
+                    "pip install sentence-transformers"
+                ) from exc
+            logger.info("loading_embedding_model model=%s", model_name)
+            self._model_cache[model_name] = SentenceTransformer(model_name)
+        self.model = self._model_cache[model_name]
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         return self.model.encode(texts, normalize_embeddings=True).tolist()
@@ -147,6 +152,12 @@ def build_provider(cfg: EmbeddingConfig, cursor: Any) -> EmbeddingProvider:
     raise ValueError(f"Unsupported EMBEDDING_PROVIDER: {cfg.provider}")
 
 
+def format_vector_sql(vector: list[float], dimension: int) -> str:
+    """Snowflake vector literal: [1.0,2.0]::VECTOR(FLOAT, n)."""
+    literal = "[" + ",".join(str(float(v)) for v in vector) + "]"
+    return f"{literal}::VECTOR(FLOAT, {dimension})"
+
+
 def upsert_embeddings(
     cursor: Any,
     cfg: EmbeddingConfig,
@@ -157,7 +168,7 @@ def upsert_embeddings(
         raise ValueError("documents and vectors length mismatch")
 
     for doc, vector in zip(documents, vectors):
-        vector_literal = "[" + ",".join(str(float(v)) for v in vector) + "]"
+        vector_sql = format_vector_sql(vector, cfg.dimension)
         cursor.execute(
             f"""
             MERGE INTO {cfg.embeddings_table} AS target
@@ -168,7 +179,7 @@ def upsert_embeddings(
                     %s AS warehouse,
                     %s AS risk_level,
                     %s AS document_text,
-                    TO_VECTOR(%s)::VECTOR(FLOAT, {cfg.dimension}) AS embedding,
+                    {vector_sql} AS embedding,
                     %s AS embedding_model,
                     %s AS embedding_version,
                     %s AS document_hash
@@ -201,7 +212,6 @@ def upsert_embeddings(
                 doc.warehouse,
                 doc.risk_level,
                 doc.document_text,
-                vector_literal,
                 cfg.model,
                 cfg.version,
                 doc.document_hash,
@@ -283,8 +293,8 @@ def main(argv: list[str] | None = None) -> int:
             f"skipped={result['skipped']}, total={result['total_documents']}"
         )
         return 0
-    except Exception as exc:
-        logger.exception("embedding_sync_failed error=%s", exc)
+    except Exception:
+        logger.exception("embedding_sync_failed")
         return 1
 
 

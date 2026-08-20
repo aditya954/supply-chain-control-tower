@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: stg_dv_load_inspections
+    description: Cleaned truck load inspection events from mobile capture app.
+    columns:
+      - name: inspection_id
+        tests: [not_null, unique]
+      - name: estimated_load_pct
+        tests: [not_null]
+      - name: status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['OPTIMAL', 'UNDERLOADED', 'OVERLOADED', 'UNSAFE']
+
+  - name: mart_dv_truck_utilization
+    description: Inspection-level truck utilization facts for dashboard analytics.
+    columns:
+      - name: inspection_id
+        tests: [not_null, unique]
+
+  - name: mart_dv_warehouse_load_summary
+    description: Daily warehouse and route load utilization summary.

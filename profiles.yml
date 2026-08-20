@@ -5,7 +5,7 @@ supply_chain_control_tower:
       type: snowflake
       account: "ewefaqm-lr31508"
       user: "ADITYA253032"
-      private_key_path: "/Users/aditya954/.dbt/snowflake_keys/rsa_key.p8"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH', '/Users/aditya954/.dbt/snowflake_keys/rsa_key.p8') }}"
       private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE') }}"
       role: "TRANSFORMER"
       database: "ANALYTICS"
@@ -18,7 +18,7 @@ supply_chain_control_tower:
       type: snowflake
       account: "ewefaqm-lr31508"
       user: "ADITYA253032"
-      private_key_path: "/Users/aditya954/.dbt/snowflake_keys/rsa_key.p8"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH', '/Users/aditya954/.dbt/snowflake_keys/rsa_key.p8') }}"
       private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE') }}"
       role: "TRANSFORMER"
       database: "ANALYTICS"

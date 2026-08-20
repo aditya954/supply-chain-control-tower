@@ -1,6 +1,10 @@
 """Unit tests for retrieval filter SQL building."""
 
-from src.ai.retriever import RetrievalFilters, build_where_clause, infer_filters_from_query
+from src.ai.retriever import (
+    RetrievalFilters,
+    build_where_clause,
+    infer_filters_from_query,
+)
 
 
 def test_build_where_clause_empty():

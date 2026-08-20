@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import csv
 import random
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from config import (
@@ -210,7 +210,6 @@ def gen_transactional(suppliers, materials, plants, warehouses, machines, carrie
     write_csv(TRANSACTIONAL_DIR / "purchase_orders.csv", list(pos[0].keys()), pos)
 
     po_lines, lid = [], 1
-    po_lookup = {p["purchase_order_id"]: p for p in pos}
     for po in pos:
         for ln in range(1, random.choices([1, 2, 3, 4, 5], weights=[0.2, 0.3, 0.25, 0.15, 0.1])[0] + 1):
             if lid > TRANSACTIONAL_ROW_COUNTS["purchase_order_lines"]:
@@ -287,7 +286,7 @@ def gen_transactional(suppliers, materials, plants, warehouses, machines, carrie
 
     sensor = []
     for i in range(1, TRANSACTIONAL_ROW_COUNTS["machine_sensor_readings"] + 1):
-        ts = datetime(2025, 1, 1) + timedelta(seconds=random.randint(0, 400 * 86400))
+        ts = datetime(2025, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=random.randint(0, 400 * 86400))
         util = round(random.uniform(60, 100), 2)
         sensor.append({
             "sensor_reading_id": i, "machine_id": random.choice(machine_ids), "plant_id": random.choice(plant_ids),
